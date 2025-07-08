@@ -1,0 +1,81 @@
+@extends('layouts.app')
+
+@section('content')
+<div class="py-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        {{-- Form pencarian dan filter --}}
+        <form method="GET" action="{{ route('dashboard') }}" class="mb-6 flex flex-wrap gap-3 items-center">
+            <input 
+            type="text" 
+            name="search" 
+            value="{{ request('search') }}" 
+            placeholder="Cari data..." 
+            class="px-3 py-2 border border-gray-300 rounded-md w-full sm:w-1/4 bg-white text-black placeholder-gray-500 dark:bg-gray-800 dark:text-white"
+        />
+
+        <select 
+        name="kategori" 
+        class="px-3 py-2 border border-gray-300 rounded-md w-full sm:w-1/6 bg-white text-black dark:bg-gray-800 dark:text-white"
+    >
+        <option value="">-- Semua Kategori --</option>
+        <option value="billing" {{ request('kategori') == 'billing' ? 'selected' : '' }}>Billing</option>
+        <option value="p2tl" {{ request('kategori') == 'p2tl' ? 'selected' : '' }}>P2TL</option>
+        <option value="harmet" {{ request('kategori') == 'harmet' ? 'selected' : '' }}>Harmet</option>
+    </select>
+
+    {{-- Dropdown Kolom (lebih kecil) --}}
+    <select 
+        name="kolom" 
+        class="px-3 py-2 border border-gray-300 rounded-md w-full sm:w-1/6 bg-white text-black dark:bg-gray-800 dark:text-white"
+    >
+        <option value="">-- Semua Kolom --</option>
+        <option value="Idpel" {{ request('kolom') == 'Idpel' ? 'selected' : '' }}>Idpel</option>
+        <option value="NO BA" {{ request('kolom') == 'NO BA' ? 'selected' : '' }}>NO BA</option>
+        <option value="NOREGISTER" {{ request('kolom') == 'NOREGISTER' ? 'selected' : '' }}>NOREGISTER</option>
+        <option value="Nama ID pelanggan" {{ request('kolom') == 'Nama ID pelanggan' ? 'selected' : '' }}>Nama ID pelanggan</option>
+    </select>
+
+        <button 
+            type="submit" 
+            class="inline-flex items-center gap-2 px-4 py-2 bg-blue-400 hover:bg-blue-500 text-white font-semibold text-sm rounded-md shadow-md transition focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-300"
+        >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1110.5 3a7.5 7.5 0 016.15 13.65z" />
+            </svg>
+            Cari
+        </button>
+        </form>
+
+        {{-- Tabel Data --}}
+        @if(isset($data) && count($data) > 0)
+            <!-- ① Bungkus tabel dengan overflow‑x‑auto -->
+            <div class="overflow-x-auto border dark:border-gray-700 rounded-lg shadow">
+                <table class="w-max whitespace-nowrap bg-white dark:bg-gray-800 text-sm">
+                    <thead class="bg-blue-600 text-white uppercase text-xs">
+                        <tr>
+                            @foreach ($data[0] as $header)
+                                <th class="px-4 py-3 border border-gray-500">{{ $header }}</th>
+                            @endforeach
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                        @foreach (array_slice($data, 1) as $row)
+                            <tr class="hover:bg-gray-100 dark:hover:bg-gray-700">
+                                @foreach ($row as $cell)
+                                    <td class="px-4 py-3 border border-gray-300 dark:border-gray-700 whitespace-nowrap text-gray-900 dark:text-gray-100">
+                                        {{ $cell }}
+                                    </td>
+                                @endforeach
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @else
+            <p class="text-gray-500 dark:text-gray-300 mt-4">Data tidak ditemukan.</p>
+        @endif
+
+    </div>
+</div>
+@endsection
