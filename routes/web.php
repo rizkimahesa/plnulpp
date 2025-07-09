@@ -5,6 +5,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SpreedsheetController;
 use App\Http\Controllers\RealisasiController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\UserController;
 
 // Redirect root ke halaman login
 Route::get('/', fn () => redirect()->route('login'));
@@ -14,6 +15,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/user', [UserController::class, 'index'])->name('user.index');
+    Route::post('/user/{id}/reset-password', [App\Http\Controllers\UserController::class, 'resetPassword'])
+    ->name('user.resetPassword')
+    ->middleware('auth');
 
     // Group data P2TL & Realisasi
     Route::prefix('data')->name('data.')->group(function () {
