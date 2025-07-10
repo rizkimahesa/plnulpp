@@ -48,7 +48,7 @@
         </form>
 
         {{-- Tabel Data --}}
-        @if(isset($data) && count($data) > 0)
+        @if((request('search') || request('kategori') || request('kolom')) && isset($data) && count($data) > 0)
             <!-- ① Bungkus tabel dengan overflow‑x‑auto -->
             <div class="overflow-x-auto border dark:border-gray-700 rounded-lg shadow">
                 <table class="w-max whitespace-nowrap bg-white dark:bg-gray-800 text-sm">
