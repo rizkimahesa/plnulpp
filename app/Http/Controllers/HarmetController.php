@@ -9,14 +9,14 @@ class HarmetController extends Controller
 {
     public function index(Request $request)
     {
-        return $this->fetchFromSheet($request, 'HARMET'); // Ganti 'HARMET' sesuai nama sheet kamu
+        return $this->fetchFromSheet($request, 'ganmet 2024 prabayar'); // Ganti 'HARMET' sesuai nama sheet kamu
     }
 
     private function fetchFromSheet(Request $request, $sheetName)
     {
         $apiKey = 'AIzaSyCz5r5jRyKdrnpx1v-w8fzrJ4OEQphBIm4';
-        $spreadsheetId = 'Ef1DsfRXA18ggDb6KQAAAAABqdh9L3QZD9-ddbqBpbfxXA';
-        $range = $sheetName . '!A1:F';
+        $spreadsheetId = '1qkDS_jlyq1jbk8oDFY9vQbSItxL-xB5B8kmfn2pvAQw';
+        $range = '!A:M';
 
         $url = "https://sheets.googleapis.com/v4/spreadsheets/{$spreadsheetId}/values/{$range}?key={$apiKey}";
         $response = Http::get($url);
