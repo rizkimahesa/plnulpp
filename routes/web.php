@@ -6,6 +6,7 @@ use App\Http\Controllers\SpreedsheetController;
 use App\Http\Controllers\RealisasiController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HarmetController;
+use App\Http\Controllers\BillingController;
 use App\Http\Controllers\UserController;
 
 // Redirect root ke halaman login
@@ -18,6 +19,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/user', [UserController::class, 'index'])->name('user.index');
     Route::get('/harmet', [HarmetController::class, 'index'])->name('harmet.index');
+    Route::get('/billing', [BillingController::class, 'data'])->name('billing.index');
     Route::post('/user/{id}/reset-password', [App\Http\Controllers\UserController::class, 'resetPassword'])
     ->name('user.resetPassword')
     ->middleware('auth');

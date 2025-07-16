@@ -1,0 +1,70 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
+
+class BillingController extends Controller
+{
+    public function data(Request $request) // <--- Ubah dari 'index' ke 'data'
+    {
+        $apiKey = 'AIzaSyCz5r5jRyKdrnpx1v-w8fzrJ4OEQphBIm4';
+        $spreadsheetId = '1Kxh6-3qWq062uyPw_LAbxMvu_7ObtH_p_xvT7Geo2ZU';
+        $range = '17120!A:CJ';
+
+        $url = "https://sheets.googleapis.com/v4/spreadsheets/{$spreadsheetId}/values/{$range}?key={$apiKey}";
+        $response = Http::get($url);
+
+        if (!$response->successful()) {
+            return view('data', ['data' => []])->withErrors('Gagal mengambil data dari Google Sheets.');
+        }
+
+        $rows = $response->json()['values'] ?? [];
+        $header = $rows[0] ?? [];
+        $body = array_slice($rows, 1);
+
+        $keyword = strtolower($request->input('search'));
+        $filterKategori = strtolower($request->input('kategori'));
+        $filterKolom = $request->input('kolom');
+        $kolomIndex = array_flip(array_map('strtolower', $header));
+
+        if ($keyword || $filterKategori || $filterKolom) {
+            $body = array_filter($body, function ($row) use ($keyword, $filterKategori, $filterKolom, $kolomIndex) {
+                $matchSearch = true;
+                if ($keyword) {
+                    $matchSearch = false;
+                    foreach ($row as $cell) {
+                        if (stripos($cell, $keyword) !== false) {
+                            $matchSearch = true;
+                            break;
+                        }
+                    }
+                }
+
+                $matchKategori = true;
+                if ($filterKategori && isset($kolomIndex['kategori'])) {
+                    $idx = $kolomIndex['kategori'];
+                    $matchKategori = isset($row[$idx]) && strtolower($row[$idx]) === $filterKategori;
+                }
+
+                $matchKolom = true;
+                if ($filterKolom && isset($kolomIndex[strtolower($filterKolom)])) {
+                    $idx = $kolomIndex[strtolower($filterKolom)];
+                    $matchKolom = isset($row[$idx]) && stripos($row[$idx], $keyword) !== false;
+                }
+
+                return $matchSearch && $matchKategori && $matchKolom;
+            });
+        }
+
+        $data = [$header, ...$body];
+        return view('data', compact('data'));
+    }
+
+    public function realisasi()
+    {
+        // Silakan isi method ini jika ingin tampilkan data realisasi
+        return view('data', ['data' => [['Belum ada data realisasi']]]);
+    }
+}
