@@ -15,8 +15,8 @@ class RealisasiController extends Controller
     private function fetchFromSheet(Request $request, $sheetName)
     {
         $apiKey = 'AIzaSyCz5r5jRyKdrnpx1v-w8fzrJ4OEQphBIm4';
-        $spreadsheetId = '1DT_HiGiBo6rfIPI1jSgI7gmZSuH2GMWc2Lj7ZOiUePY';
-        $range = $sheetName . '!A:AI';
+        $spreadsheetId = '1_gtHDcSetTEggCVeLt1H_nx_25rXXOrvM0BMWa6plfE';
+        $range = '!A:AI';
 
         $url = "https://sheets.googleapis.com/v4/spreadsheets/{$spreadsheetId}/values/{$range}?key={$apiKey}";
         $response = Http::get($url);

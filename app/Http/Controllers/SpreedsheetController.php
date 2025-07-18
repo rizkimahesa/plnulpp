@@ -10,8 +10,8 @@ class SpreedsheetController extends Controller
     public function data(Request $request) // <--- Ubah dari 'index' ke 'data'
     {
         $apiKey = 'AIzaSyCz5r5jRyKdrnpx1v-w8fzrJ4OEQphBIm4';
-        $spreadsheetId = '1DT_HiGiBo6rfIPI1jSgI7gmZSuH2GMWc2Lj7ZOiUePY';
-        $range = 'P2tl!A:AI';
+        $spreadsheetId = '1qOjBDKZ6ZIvrP_otBfqXc9EA1PfBjzhPl0wBwc9Fk5M';
+        $range = '!A:AI';
 
         $url = "https://sheets.googleapis.com/v4/spreadsheets/{$spreadsheetId}/values/{$range}?key={$apiKey}";
         $response = Http::get($url);

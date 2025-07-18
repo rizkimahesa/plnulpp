@@ -19,7 +19,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/user', [UserController::class, 'index'])->name('user.index');
     Route::get('/harmet', [HarmetController::class, 'index'])->name('harmet.index');
-    Route::get('/billing', [BillingController::class, 'data'])->name('billing.index');
+    Route::get('/billing', [BillingController::class, 'index'])->name('billing.index');
     Route::post('/user/{id}/reset-password', [App\Http\Controllers\UserController::class, 'resetPassword'])
     ->name('user.resetPassword')
     ->middleware('auth');

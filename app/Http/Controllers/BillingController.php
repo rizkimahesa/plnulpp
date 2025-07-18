@@ -7,30 +7,40 @@ use Illuminate\Support\Facades\Http;
 
 class BillingController extends Controller
 {
-    public function data(Request $request) // <--- Ubah dari 'index' ke 'data'
+    public function index(Request $request)
     {
         $apiKey = 'AIzaSyCz5r5jRyKdrnpx1v-w8fzrJ4OEQphBIm4';
-        $spreadsheetId = '1Kxh6-3qWq062uyPw_LAbxMvu_7ObtH_p_xvT7Geo2ZU';
-        $range = '17120!A:CJ';
+        $spreadsheetId = '1a5DSLnWj6WWPkJZzoCgb4ggvyONzFFo_LHA1lTYyam0';
+        $range ='!A:CJ';
 
         $url = "https://sheets.googleapis.com/v4/spreadsheets/{$spreadsheetId}/values/{$range}?key={$apiKey}";
         $response = Http::get($url);
 
         if (!$response->successful()) {
-            return view('data', ['data' => []])->withErrors('Gagal mengambil data dari Google Sheets.');
+            return view('data', ['data' => []])->withErrors("Gagal mengambil data dari Sheet: $sheetName.");
         }
 
         $rows = $response->json()['values'] ?? [];
         $header = $rows[0] ?? [];
         $body = array_slice($rows, 1);
 
+        // Buat array asosiatif
+        $mappedBody = array_map(function ($row) use ($header) {
+            $assoc = [];
+            foreach ($header as $i => $key) {
+                $assoc[$key] = $row[$i] ?? '';
+            }
+            return $assoc;
+        }, $body);
+
+        // Filtering
         $keyword = strtolower($request->input('search'));
         $filterKategori = strtolower($request->input('kategori'));
         $filterKolom = $request->input('kolom');
         $kolomIndex = array_flip(array_map('strtolower', $header));
 
         if ($keyword || $filterKategori || $filterKolom) {
-            $body = array_filter($body, function ($row) use ($keyword, $filterKategori, $filterKolom, $kolomIndex) {
+            $mappedBody = array_filter($mappedBody, function ($row) use ($keyword, $filterKategori, $filterKolom) {
                 $matchSearch = true;
                 if ($keyword) {
                     $matchSearch = false;
@@ -43,9 +53,8 @@ class BillingController extends Controller
                 }
 
                 $matchKategori = true;
-                if ($filterKategori && isset($kolomIndex['kategori'])) {
-                    $idx = $kolomIndex['kategori'];
-                    $matchKategori = isset($row[$idx]) && strtolower($row[$idx]) === $filterKategori;
+                if ($filterKategori && isset($row['kategori'])) {
+                    $matchKategori = strtolower($row['kategori']) === $filterKategori;
                 }
 
                 $matchKolom = true;
@@ -59,12 +68,7 @@ class BillingController extends Controller
         }
 
         $data = [$header, ...$body];
-        return view('data', compact('data'));
-    }
 
-    public function realisasi()
-    {
-        // Silakan isi method ini jika ingin tampilkan data realisasi
-        return view('data', ['data' => [['Belum ada data realisasi']]]);
+        return view('data', compact('data'));
     }
 }

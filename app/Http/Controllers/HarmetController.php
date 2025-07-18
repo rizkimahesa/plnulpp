@@ -9,13 +9,8 @@ class HarmetController extends Controller
 {
     public function index(Request $request)
     {
-        return $this->fetchFromSheet($request, 'ganmet 2024 prabayar'); // Ganti 'HARMET' sesuai nama sheet kamu
-    }
-
-    private function fetchFromSheet(Request $request, $sheetName)
-    {
         $apiKey = 'AIzaSyCz5r5jRyKdrnpx1v-w8fzrJ4OEQphBIm4';
-        $spreadsheetId = '1qkDS_jlyq1jbk8oDFY9vQbSItxL-xB5B8kmfn2pvAQw';
+        $spreadsheetId = '1xPT7YXpXm2RwiD-Z_bbyQ-qjtE3LYxKEx6-DnqKLmYU';
         $range = '!A:M';
 
         $url = "https://sheets.googleapis.com/v4/spreadsheets/{$spreadsheetId}/values/{$range}?key={$apiKey}";
@@ -47,12 +42,18 @@ class HarmetController extends Controller
         if ($keyword || $filterKategori || $filterKolom) {
             $body = array_filter($body, function ($row) use ($keyword, $filterKategori, $filterKolom, $kolomIndex) {
                 $matchSearch = true;
+
                 if ($keyword) {
-                    $matchSearch = false;
-                    foreach ($row as $cell) {
-                        if (stripos($cell, $keyword) !== false) {
-                            $matchSearch = true;
-                            break;
+                    if ($filterKolom && isset($kolomIndex[strtolower($filterKolom)])) {
+                        $idx = $kolomIndex[strtolower($filterKolom)];
+                        $matchSearch = isset($row[$idx]) && stripos($row[$idx], $keyword) !== false;
+                    } else {
+                        $matchSearch = false;
+                        foreach ($row as $cell) {
+                            if (stripos($cell, $keyword) !== false) {
+                                $matchSearch = true;
+                                break;
+                            }
                         }
                     }
                 }
@@ -63,13 +64,7 @@ class HarmetController extends Controller
                     $matchKategori = isset($row[$idx]) && strtolower($row[$idx]) === $filterKategori;
                 }
 
-                $matchKolom = true;
-                if ($filterKolom && isset($kolomIndex[strtolower($filterKolom)])) {
-                    $idx = $kolomIndex[strtolower($filterKolom)];
-                    $matchKolom = isset($row[$idx]) && stripos($row[$idx], $keyword) !== false;
-                }
-
-                return $matchSearch && $matchKategori && $matchKolom;
+                return $matchSearch && $matchKategori;
             });
         }
 
