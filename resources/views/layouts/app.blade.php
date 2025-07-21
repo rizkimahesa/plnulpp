@@ -34,7 +34,13 @@
 </head>
 <body class="font-sans antialiased bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
     {{-- Navbar --}}
-    @include('layouts.navigation')
+    @auth
+    @if (Auth::user()->role === 'admin')
+        @include('layouts.navigation')
+    @else
+        @include('layouts.navigationuser')
+    @endif
+    @endauth
 
     <!-- Page Content -->
     <main class="pt-20 px-4 sm:px-6 lg:px-8">

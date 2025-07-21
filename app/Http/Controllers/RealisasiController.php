@@ -67,4 +67,30 @@ class RealisasiController extends Controller
 
         return view('data', compact('data'));
     }
+    public function byIdpel($idpel)
+{
+    $apiKey = 'AIzaSyCz5r5jRyKdrnpx1v-w8fzrJ4OEQphBIm4';
+    $spreadsheetId = '1_gtHDcSetTEggCVeLt1H_nx_25rXXOrvM0BMWa6plfE';
+    $range = '!A:AI';
+
+    $url = "https://sheets.googleapis.com/v4/spreadsheets/{$spreadsheetId}/values/{$range}?key={$apiKey}";
+    $response = Http::get($url);
+
+    if (!$response->successful()) {
+        return view('data', ['data' => []])->withErrors('Gagal mengambil data realisasi.');
+    }
+
+    $rows = $response->json()['values'] ?? [];
+    $header = $rows[0] ?? [];
+    $body = array_slice($rows, 1);
+    $indexMap = array_flip(array_map('strtolower', $header));
+
+    $filtered = array_filter($body, function ($row) use ($indexMap, $idpel) {
+        return isset($indexMap['idpel']) && isset($row[$indexMap['idpel']]) && $row[$indexMap['idpel']] === $idpel;
+    });
+
+    $data = [$header, ...$filtered];
+
+    return view('data', compact('data'));
+    }
 }
