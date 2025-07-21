@@ -41,7 +41,7 @@
                             @php
                                 $idpelanggan = ($idpelIndex !== false && isset($row[$idpelIndex])) ? $row[$idpelIndex] : null;
                             @endphp
-                            
+
                                 @foreach ($headers as $i => $header)
                                     <td class="px-2 py-1 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 text-xs break-words max-w-[200px]">
                                         @php
@@ -51,7 +51,7 @@
                                         @endphp
 
                                         @if ($isStatusColumn && $isLunas && request()->routeIs('data.p2tl') && $idpelanggan)
-                                            <a href="{{ route('realisasi.byIdpel', ['idpel' => $idpelanggan]) }}"
+                                            <a href="{{ route('data.realisasi.byIdpel', ['idpel' => $idpelanggan]) }}"
                                             class="inline-block px-2 py-1 bg-green-500 hover:bg-green-600 text-white rounded text-xs font-semibold">
                                                 🔗 Lunas
                                             </a>

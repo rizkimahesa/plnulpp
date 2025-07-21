@@ -50,13 +50,19 @@
                         </x-slot>
 
                         <x-slot name="content">
-                            <form method="POST" action="{{ route('logout') }}">
-                                @csrf
-                                <x-dropdown-link :href="route('logout')" onclick="event.preventDefault(); this.closest('form').submit();">
-                                    {{ __('Log Out') }}
-                                </x-dropdown-link>
-                            </form>
-                        </x-slot>
+                        {{-- Menu Edit Profile --}}
+                        <x-dropdown-link :href="route('profile.edit')">
+                            {{ __('Edit Profile') }}
+                        </x-dropdown-link>
+
+                        {{-- Menu Logout --}}
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <x-dropdown-link :href="route('logout')" onclick="event.preventDefault(); this.closest('form').submit();">
+                                {{ __('Log Out') }}
+                            </x-dropdown-link>
+                        </form>
+                    </x-slot>
                     </x-dropdown>
                 </div>
                 @endauth
