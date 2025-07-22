@@ -8,6 +8,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HarmetController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\UserDashboardController;
 use App\Http\Middleware\RoleMiddleware;
 
 // Redirect root ke halaman login
@@ -39,9 +40,7 @@ Route::middleware([
 // ==============================
 Route::middleware(['auth', 'verified'])->group(function () {
     // Halaman dashboard user biasa
-    Route::get('/user-dashboard', function () {
-        return view('user.dashboard');
-    })->name('user.dashboard');
+    Route::get('user/dashboard', [UserDashboardController::class, 'index'])->name('user.dashboard');
 
     // Halaman Harmet
     Route::get('/harmet', [HarmetController::class, 'index'])->name('harmet.index');
@@ -55,6 +54,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/p2tl', [SpreedsheetController::class, 'data'])->name('p2tl');
         Route::get('/realisasi', [RealisasiController::class, 'index'])->name('realisasi');
         Route::get('/realisasi/idpel/{idpel}', [RealisasiController::class, 'byIdpel'])->name('realisasi.byIdpel');
+        Route::get('/data/realisasi/{idpel}', [SpreedsheetController::class, 'realisasiByIdpel'])->name('data.realisasi.byIdpel');
         Route::get('p2tl/{id}/edit', [SpreedsheetController::class, 'edit'])->name('p2tl.edit');
         Route::post('p2tl/{id}/update', [SpreedsheetController::class, 'update'])->name('p2tl.update');
 

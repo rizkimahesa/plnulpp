@@ -7,9 +7,10 @@
             📊 Data dari Google Sheets
         </h1>
 
-        @if(session('error'))
+        {{-- Tampilkan error jika ada --}}
+        @if(session('error') || ($error ?? false))
             <div class="mb-4 text-red-600 dark:text-red-400 font-semibold">
-                {{ session('error') }}
+                {{ session('error') ?? $error }}
             </div>
         @endif
 
@@ -18,6 +19,7 @@
                 $headers = $data[0];
                 $body = array_slice($data, 1);
                 $idpelIndex = array_search('IDPEL', array_map('strtoupper', $headers));
+                $statusIndex = array_search('STATUS', array_map('strtoupper', $headers));
             @endphp
 
             <div class="overflow-x-auto w-full border border-gray-300 dark:border-gray-700 rounded-xl shadow scrollbar-thin">
@@ -36,37 +38,30 @@
                     </thead>
                     <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                         @forelse ($body as $index => $row)
-                            <tr class="{{ $index % 2 === 0 ? 'bg-gray-50 dark:bg-gray-900' : '' }} hover:bg-indigo-50 dark:hover:bg-indigo-700 transition duration-150">
-
                             @php
-                                $idpelanggan = ($idpelIndex !== false && isset($row[$idpelIndex])) ? $row[$idpelIndex] : null;
+                                $idpelanggan = ($idpelIndex !== false && isset($row[$idpelIndex])) ? trim($row[$idpelIndex]) : null;
+                                $statusValue = ($statusIndex !== false && isset($row[$statusIndex])) ? strtolower(trim($row[$statusIndex])) : '';
                             @endphp
+
+                            <tr class="{{ $index % 2 === 0 ? 'bg-gray-50 dark:bg-gray-900' : '' }} hover:bg-indigo-50 dark:hover:bg-indigo-700 transition duration-150">
 
                                 @foreach ($headers as $i => $header)
                                     <td class="px-2 py-1 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 text-xs break-words max-w-[200px]">
-                                        @php
-                                            $cellValue = $row[$i] ?? '';
-                                            $isStatusColumn = strtolower(trim($header)) === 'status';
-                                            $isLunas = strtolower(trim($cellValue)) === 'lunas';
-                                        @endphp
-
-                                        @if ($isStatusColumn && $isLunas && request()->routeIs('data.p2tl') && $idpelanggan)
-                                            <a href="{{ route('data.realisasi.byIdpel', ['idpel' => $idpelanggan]) }}"
-                                            class="inline-block px-2 py-1 bg-green-500 hover:bg-green-600 text-white rounded text-xs font-semibold">
-                                                🔗 Lunas
-                                            </a>
-                                        @else
-                                            {{ $cellValue }}
-                                        @endif
+                                        {{ $row[$i] ?? '' }}
                                     </td>
                                 @endforeach
-                                <td class="px-2 py-1 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 text-xs whitespace-nowrap">
-                                    @php
-                                        $idpelanggan = ($idpelIndex !== false && isset($row[$idpelIndex])) ? $row[$idpelIndex] : null;
-                                    @endphp
+
+                                <td class="px-2 py-1 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 text-xs whitespace-nowrap space-x-1">
+                                    @if (request()->routeIs('data.p2tl') && $statusValue === 'lunas' && $idpelanggan)
+                                        <a href="{{ route('data.realisasi.byIdpel', ['idpel' => $idpelanggan]) }}"
+                                           class="inline-block px-2 py-1 bg-green-500 hover:bg-green-600 text-white rounded text-xs font-semibold">
+                                            🔗 Lunas
+                                        </a>
+                                    @endif
 
                                     @if ($idpelanggan && request()->routeIs('data.p2tl'))
-                                        <a href="{{ route('data.p2tl.edit', ['id' => $idpelanggan]) }}" class="inline-block px-2 py-1 bg-yellow-400 hover:bg-yellow-500 text-white rounded text-xs font-semibold">
+                                        <a href="{{ route('data.p2tl.edit', ['id' => $idpelanggan]) }}"
+                                           class="inline-block px-2 py-1 bg-yellow-400 hover:bg-yellow-500 text-white rounded text-xs font-semibold">
                                             ✏️ Edit
                                         </a>
                                     @endif

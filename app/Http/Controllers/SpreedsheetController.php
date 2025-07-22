@@ -14,123 +14,105 @@ class SpreedsheetController extends Controller
     private $sheetName = 'Sheet1';
     private $apiKey = 'AIzaSyCz5r5jRyKdrnpx1v-w8fzrJ4OEQphBIm4';
 
+    private function getSheetData($spreadsheetId, $range)
+    {
+        $url = "https://sheets.googleapis.com/v4/spreadsheets/{$spreadsheetId}/values/{$range}?key={$this->apiKey}";
+        $response = Http::get($url);
+        return $response->json()['values'] ?? [];
+    }
+
+    private function initGoogleClient($scopes = [Sheets::SPREADSHEETS])
+    {
+        $client = new Client();
+        $client->setApplicationName('Laravel Google Sheets');
+        $client->setScopes($scopes);
+        $client->setAuthConfig(storage_path('app/credentials.json'));
+        return new Sheets($client);
+    }
+
+    private function findRowByIdpel($data, $idpelIndex, $id)
+    {
+        foreach ($data as $i => $row) {
+            if (isset($row[$idpelIndex]) && $row[$idpelIndex] == $id) {
+                return $i;
+            }
+        }
+        return null;
+    }
+
+    private function columnLetterFromIndex($index)
+    {
+        $letter = '';
+        while ($index >= 0) {
+            $letter = chr($index % 26 + 65) . $letter;
+            $index = intval($index / 26) - 1;
+        }
+        return $letter;
+    }
+
     public function data(Request $request)
     {
-        $range = '!A:AI';
-        $p2tlUrl = "https://sheets.googleapis.com/v4/spreadsheets/{$this->spreadsheetId}/values/{$range}?key={$this->apiKey}";
-        $p2tlResponse = Http::get($p2tlUrl);
-
-        $p2tlRows = $p2tlResponse->json()['values'] ?? [];
-        $p2tlHeader = $p2tlRows[0] ?? [];
-        $p2tlBody = array_slice($p2tlRows, 1);
-        $p2tlIndex = array_flip(array_map('strtolower', $p2tlHeader));
+        $range = 'Sheet1!A:AI';
+        $rows = $this->getSheetData($this->spreadsheetId, $range);
+        $header = $rows[0] ?? [];
+        $body = array_slice($rows, 1);
+        $index = array_flip(array_map('strtolower', $header));
 
         $keyword = strtolower($request->input('search'));
-        $filterKategori = strtolower($request->input('kategori'));
-        $filterKolom = $request->input('kolom');
+        $kategori = strtolower($request->input('kategori'));
+        $kolom = $request->input('kolom');
 
-        // Filter data
-        if ($keyword || $filterKategori || $filterKolom) {
-            $p2tlBody = array_filter($p2tlBody, function ($row) use ($keyword, $filterKategori, $filterKolom, $p2tlIndex) {
-                $matchSearch = true;
-                if ($keyword) {
-                    $matchSearch = false;
-                    foreach ($row as $cell) {
-                        if (stripos($cell, $keyword) !== false) {
-                            $matchSearch = true;
-                            break;
-                        }
-                    }
-                }
-
-                $matchKategori = true;
-                if ($filterKategori && isset($p2tlIndex['kategori'])) {
-                    $idx = $p2tlIndex['kategori'];
-                    $matchKategori = isset($row[$idx]) && strtolower($row[$idx]) === $filterKategori;
-                }
-
-                $matchKolom = true;
-                if ($filterKolom && isset($p2tlIndex[strtolower($filterKolom)])) {
-                    $idx = $p2tlIndex[strtolower($filterKolom)];
-                    $matchKolom = isset($row[$idx]) && stripos($row[$idx], $keyword) !== false;
-                }
-
+        if ($keyword || $kategori || $kolom) {
+            $body = array_filter($body, function ($row) use ($keyword, $kategori, $kolom, $index) {
+                $matchSearch = !$keyword || array_filter($row, fn($cell) => stripos($cell, $keyword) !== false);
+                $matchKategori = !$kategori || (isset($index['kategori']) && strtolower($row[$index['kategori']] ?? '') === $kategori);
+                $matchKolom = !$kolom || (isset($index[strtolower($kolom)]) && stripos($row[$index[strtolower($kolom)]] ?? '', $keyword) !== false);
                 return $matchSearch && $matchKategori && $matchKolom;
             });
         }
 
-        $p2tlData = [$p2tlHeader, ...$p2tlBody];
-
-        // Cari IDPEL lunas
-        $idpelLunas = [];
-        if (isset($p2tlIndex['status']) && isset($p2tlIndex['idpel'])) {
-            foreach ($p2tlBody as $row) {
-                if (isset($row[$p2tlIndex['status']]) && strtolower($row[$p2tlIndex['status']]) === 'lunas') {
-                    $idpelLunas[] = $row[$p2tlIndex['idpel']];
-                }
-            }
-        }
-
-        // Ambil realisasi jika IDPEL lunas ada
+        $idpelLunas = array_column(array_filter($body, fn($row) => strtolower($row[$index['status']] ?? '') === 'lunas'), $index['idpel']);
         $realisasiData = [];
+
         if (!empty($idpelLunas)) {
-            $realSpreadsheetId = '1_gtHDcSetTEggCVeLt1H_nx_25rXXOrvM0BMWa6plfE';
-            $realRange = '!A:AI';
-            $realUrl = "https://sheets.googleapis.com/v4/spreadsheets/{$realSpreadsheetId}/values/{$realRange}?key={$this->apiKey}";
-            $realResponse = Http::get($realUrl);
+            // Ambil data realisasi
+            $realRows = $this->getSheetData('1_gtHDcSetTEggCVeLt1H_nx_25rXXOrvM0BMWa6plfE', 'Sheet1!A:AI');
+            $realHeader = $realRows[0] ?? [];
+            $realBody = array_slice($realRows, 1);
+            $realIndex = array_flip(array_map('strtolower', $realHeader));
 
-            if ($realResponse->successful()) {
-                $realRows = $realResponse->json()['values'] ?? [];
-                $realHeader = $realRows[0] ?? [];
-                $realBody = array_slice($realRows, 1);
-                $realIndex = array_flip(array_map('strtolower', $realHeader));
+            // Normalisasi semua IDPEL dari p2tl
+            $normalizedIdpelLunas = array_map(function ($val) {
+                return strtolower(trim((string)$val));
+            }, $idpelLunas);
 
-                if (isset($realIndex['idpel'])) {
-                    $filteredReal = array_filter($realBody, function ($row) use ($realIndex, $idpelLunas) {
-                        return isset($row[$realIndex['idpel']]) && in_array($row[$realIndex['idpel']], $idpelLunas);
-                    });
-                    $realisasiData = [$realHeader, ...$filteredReal];
-                }
+            if (isset($realIndex['idpel'])) {
+                $filteredReal = array_filter($realBody, function ($row) use ($realIndex, $normalizedIdpelLunas) {
+                    $idpelReal = strtolower(trim((string)($row[$realIndex['idpel']] ?? '')));
+                    return in_array($idpelReal, $normalizedIdpelLunas);
+                });
+
+                $realisasiData = [$realHeader, ...array_values($filteredReal)];
             }
         }
 
         return view('data', [
-            'data' => $p2tlData,
+            'data' => [$header, ...array_values($body)],
             'realisasiData' => $realisasiData,
         ]);
     }
 
     public function edit($id)
     {
-        $client = new Client();
-        $client->setApplicationName('Laravel Google Sheets');
-        $client->setScopes([Sheets::SPREADSHEETS_READONLY]);
-        $client->setAuthConfig(storage_path('app/credentials.json'));
-
-        $service = new Sheets($client);
+        $service = $this->initGoogleClient([Sheets::SPREADSHEETS_READONLY]);
         $range = $this->sheetName . '!A:AI';
-        $response = $service->spreadsheets_values->get($this->spreadsheetId, $range);
-        $values = $response->getValues();
-
-        if (empty($values)) {
-            return redirect()->back()->with('error', 'Data tidak ditemukan.');
-        }
+        $values = $service->spreadsheets_values->get($this->spreadsheetId, $range)->getValues();
 
         $headers = $values[0];
-        $dataRows = array_slice($values, 1);
         $idpelIndex = array_search('Idpel', $headers);
-        $rowToEdit = null;
+        $rowToEdit = collect(array_slice($values, 1))->firstWhere($idpelIndex, $id);
 
-        foreach ($dataRows as $row) {
-            if (isset($row[$idpelIndex]) && $row[$idpelIndex] == $id) {
-                $rowToEdit = $row;
-                break;
-            }
-        }
-
-        if (!$rowToEdit) {
-            return redirect()->back()->with('error', 'Data dengan IDPEL tersebut tidak ditemukan.');
-        }
+        if (!$rowToEdit) return redirect()->back()->with('error', 'Data tidak ditemukan.');
 
         return view('user.edit', [
             'id' => $id,
@@ -140,94 +122,93 @@ class SpreedsheetController extends Controller
     }
 
     public function update(Request $request, $id)
+    {
+        $service = $this->initGoogleClient();
+        $range = $this->sheetName . '!A:AI';
+        $data = $service->spreadsheets_values->get($this->spreadsheetId, $range)->getValues();
+
+        $headers = $data[0];
+        $headersUpper = array_map('strtoupper', $headers);
+        $idpelIndex = array_search('IDPEL', $headersUpper);
+        $rowIndex = $this->findRowByIdpel($data, $idpelIndex, $id);
+
+        if (is_null($rowIndex)) {
+            return redirect()->route('data.p2tl')->with('error', 'ID tidak ditemukan dalam spreadsheet.');
+        }
+
+        $editableHeaders = [
+            'TANGGAL SP1', 'TANGGAL SP2', 'TANGGAL SP3',
+            'TANGGAL Peringatan 1', 'Tanggal Peringatan 2',
+            'ket pangilan 2', 'ket pangilan 3',
+            'ket peringatan 1', 'ket peringatan 2',
+        ];
+
+        $maxCols = max(count($headers), 35);
+        $data[$rowIndex] = array_pad($data[$rowIndex], $maxCols, '');
+
+        foreach ($editableHeaders as $header) {
+            $colIndex = array_search(strtoupper($header), $headersUpper);
+            if ($colIndex !== false) {
+                $data[$rowIndex][$colIndex] = $request->input($header, '');
+            }
+        }
+
+        $values = [ array_map('strval', $data[$rowIndex]) ];
+        $lastCol = $this->columnLetterFromIndex(count($values[0]) - 1);
+        $updateRange = "{$this->sheetName}!A" . ($rowIndex + 1) . ":{$lastCol}" . ($rowIndex + 1);
+
+        $body = new ValueRange([
+            'range' => $updateRange,
+            'majorDimension' => 'ROWS',
+            'values' => $values,
+        ]);
+
+        $service->spreadsheets_values->update(
+            $this->spreadsheetId,
+            $updateRange,
+            $body,
+            ['valueInputOption' => 'RAW']
+        );
+
+        return redirect()->route('data.p2tl')->with('success', '✅ Data berhasil diperbarui.');
+    }
+    public function realisasiByIdpel($idpel)
 {
-    // Inisialisasi Google Client & Sheets Service
-    $client = new Client();
-    $client->setApplicationName('Laravel Google Sheets');
-    $client->setScopes([Sheets::SPREADSHEETS]);
-    $client->setAuthConfig(storage_path('app/credentials.json'));
+    try {
+        $spreadsheetId = '1_gtHDcSetTEggCVeLt1H_nx_25rXXOrvM0BMWa6plfE';
+        $range = 'Sheet1!A:AI';
 
-    $service = new Sheets($client);
-
-    // Ambil data semua baris dari Sheet
-    $range = $this->sheetName . '!A:AI';
-    $response = $service->spreadsheets_values->get($this->spreadsheetId, $range);
-    $data = $response->getValues();
-
-    if (empty($data) || !isset($data[0])) {
-        return redirect()->route('data.p2tl')->with('error', 'Data spreadsheet kosong atau header tidak ditemukan.');
-    }
-
-    // Header & indeks kolom
-    $headers = $data[0];
-    $headersUpper = array_map('strtoupper', $headers);
-    $idpelIndex = array_search('IDPEL', $headersUpper);
-
-    if ($idpelIndex === false) {
-        return redirect()->route('data.p2tl')->with('error', 'Kolom IDPEL tidak ditemukan di header.');
-    }
-
-    // Temukan baris berdasarkan IDPEL
-    $rowIndex = null;
-    foreach ($data as $i => $row) {
-        if (isset($row[$idpelIndex]) && $row[$idpelIndex] == $id) {
-            $rowIndex = $i;
-            break;
+        $rows = $this->getSheetData($spreadsheetId, $range);
+        if (count($rows) < 4) {
+            throw new \Exception("Data tidak ditemukan.");
         }
-    }
 
-    if ($rowIndex === null) {
-        return redirect()->route('data.p2tl')->with('error', 'ID tidak ditemukan dalam spreadsheet.');
-    }
+        $header = $rows[2]; // Baris ke-4 (index 2)
+        $body = array_slice($rows, 6);
 
-    $editableHeaders = [
-        'TANGGAL SP1', 'TANGGAL SP2', 'TANGGAL SP3',
-        'TANGGAL Peringatan 1', 'Tanggal Peringatan 2',
-        'ket pangilan 2', 'ket pangilan 3',
-        'ket peringatan 1', 'ket peringatan 2',
-    ];
-
-
-    // Siapkan baris yang ingin diperbarui
-    $maxCols = max(count($headers), 35);
-    $data[$rowIndex] = array_pad($data[$rowIndex], $maxCols, '');
-
-    foreach ($editableHeaders as $header) {
-        $colIndex = array_search(strtoupper($header), $headersUpper);
-        if ($colIndex !== false) {
-            $inputValue = $request->input($header);
-            $data[$rowIndex][$colIndex] = $inputValue ?? '';
-        } else {
-            \Log::warning("Kolom header '{$header}' tidak ditemukan di spreadsheet.");
+        // Buat map header UPPERCASE
+        $indexMap = array_flip(array_map('strtoupper', $header));
+        if (!isset($indexMap['IDPEL'])) {
+            throw new \Exception("Kolom IDPEL tidak ditemukan.");
         }
-    }
 
-    // Format 2D array numerik
-    $rowData = array_map(fn($val) => (string)$val, array_values($data[$rowIndex]));
-    $values = [ $rowData ];
+        $filtered = array_filter($body, function ($row) use ($indexMap, $idpel) {
+            return isset($row[$indexMap['IDPEL']]) &&
+                   strtoupper(trim($row[$indexMap['IDPEL']])) === strtoupper(trim($idpel));
+        });
 
-    // Hitung rentang kolom yang akan diperbarui
-    $lastColIndex = count($rowData) - 1;
-    $lastColLetter = $this->columnLetterFromIndex($lastColIndex);
-    $updateRange = "{$this->sheetName}!A" . ($rowIndex + 1) . ":{$lastColLetter}" . ($rowIndex + 1);
+        if (empty($filtered)) {
+            throw new \Exception("Data dengan IDPEL '$idpel' tidak ditemukan.");
+        }
 
-    // Siapkan body update
-    $body = new ValueRange([
-        'range' => $updateRange,
-        'majorDimension' => 'ROWS',
-        'values' => $values,
-    ]);
+        $data = [$header, ...array_values($filtered)];
+        return view('data', compact('data'));
 
-    $params = ['valueInputOption' => 'RAW'];
-
-    // Eksekusi update ke Google Sheets
-    $service->spreadsheets_values->update(
-        $this->spreadsheetId,
-        $updateRange,
-        $body,
-        $params
-    );
-
-    return redirect()->route('data.p2tl')->with('success', '✅ Data berhasil diperbarui.');
+    } catch (\Exception $e) {
+        return view('data', [
+            'data' => [],
+            'error' => $e->getMessage()
+        ]);
+        }
     }
 }
