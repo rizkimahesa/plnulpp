@@ -22,7 +22,6 @@ Route::middleware([
     'verified',
     RoleMiddleware::class . ':admin',
 ])->group(function () {
-    // Halaman dashboard admin
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Manajemen pengguna
@@ -39,8 +38,7 @@ Route::middleware([
 // ROUTE UNTUK ADMIN & USER (AKSES UMUM)
 // ==============================
 Route::middleware(['auth', 'verified'])->group(function () {
-    // Halaman dashboard user biasa
-    Route::get('user/dashboard', [UserDashboardController::class, 'index'])->name('user.dashboard');
+        Route::get('user/dashboard', [UserDashboardController::class, 'index'])->name('user.dashboard');
 
     // Halaman Harmet
     Route::get('/harmet', [HarmetController::class, 'index'])->name('harmet.index');
@@ -57,7 +55,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/data/realisasi/{idpel}', [SpreedsheetController::class, 'realisasiByIdpel'])->name('data.realisasi.byIdpel');
         Route::get('p2tl/{id}/edit', [SpreedsheetController::class, 'edit'])->name('p2tl.edit');
         Route::post('p2tl/{id}/update', [SpreedsheetController::class, 'update'])->name('p2tl.update');
-
     });
 });
 

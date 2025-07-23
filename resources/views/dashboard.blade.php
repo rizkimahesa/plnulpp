@@ -32,7 +32,7 @@
 
                 @if(!request('kategori') || request('kategori') == 'p2tl')
                     <optgroup label="Kolom P2TL">
-                        <option value="Idpel" {{ request('kolom') == 'Idpel' ? 'selected' : '' }}>Idpel</option>
+                        <option value="IDPEL" {{ request('kolom') == 'IDPEL' ? 'selected' : '' }}>IDPEL</option>
                         <option value="NO BA" {{ request('kolom') == 'NO BA' ? 'selected' : '' }}>NO BA</option>
                         <option value="NOREGISTER" {{ request('kolom') == 'NOREGISTER' ? 'selected' : '' }}>NOREGISTER</option>
                         <option value="Nama ID pelanggan" {{ request('kolom') == 'Nama ID pelanggan' ? 'selected' : '' }}>Nama ID pelanggan</option>
