@@ -9,14 +9,14 @@ class RealisasiController extends Controller
 {
     public function index(Request $request)
     {
-        return $this->fetchFromSheet($request, 'realisasi');
+        return $this->fetchFromSheet($request, 'Sheet1');
     }
 
     private function fetchFromSheet(Request $request, $sheetName)
     {
         $apiKey = 'AIzaSyCz5r5jRyKdrnpx1v-w8fzrJ4OEQphBIm4';
         $spreadsheetId = '1_gtHDcSetTEggCVeLt1H_nx_25rXXOrvM0BMWa6plfE';
-        $range = '!A:AI';
+        $range = 'Sheet1!A:AI';
 
         $url = "https://sheets.googleapis.com/v4/spreadsheets/{$spreadsheetId}/values/{$range}?key={$apiKey}";
         $response = Http::get($url);
@@ -67,4 +67,59 @@ class RealisasiController extends Controller
 
         return view('data', compact('data'));
     }
+
+    public function byIdpel($idpel)
+{
+    try {
+        $spreadsheetId = '1_gtHDcSetTEggCVeLt1H_nx_25rXXOrvM0BMWa6plfE';
+        $apiKey = 'AIzaSyCz5r5jRyKdrnpx1v-w8fzrJ4OEQphBIm4';
+        $range = 'Sheet1!A:AI';
+
+        $url = "https://sheets.googleapis.com/v4/spreadsheets/{$spreadsheetId}/values/{$range}?key={$apiKey}";
+        $response = Http::get($url);
+
+        if (!$response->successful()) {
+            throw new \Exception('Gagal mengambil data dari Google Sheets.');
+        }
+
+        $values = $response->json('values');
+        if (empty($values)) {
+            throw new \Exception('Data Google Sheets kosong.');
+        }
+
+        // Baris ke-3 dianggap sebagai header
+        $header = $values[2];
+        $body = array_slice($values, 3);
+
+        // Mapping header (gunakan UPPERCASE agar seragam)
+        $indexMap = [];
+        foreach ($header as $index => $column) {
+            $indexMap[strtoupper(trim($column))] = $index;
+        }
+
+        if (!isset($indexMap['IDPEL'])) {
+            throw new \Exception('Kolom IDPEL tidak ditemukan di header.');
+        }
+
+        // Pencarian berdasarkan IDPEL (case-insensitive)
+        $index = $indexMap['IDPEL'];
+        $filtered = array_filter($body, function ($row) use ($index, $idpel) {
+            $idpelRow = strtoupper(trim($row[$index] ?? ''));
+            return $idpelRow === strtoupper(trim($idpel));
+        });
+
+        if (empty($filtered)) {
+            throw new \Exception("Data dengan IDPEL '$idpel' tidak ditemukan.");
+        }
+
+        $data = [$header, ...$filtered];
+        return view('data', compact('data'));
+
+    } catch (\Exception $e) {
+        return response()->view('data', [
+            'data' => [],
+            'error' => $e->getMessage()
+        ], 500);
+    }
+}
 }

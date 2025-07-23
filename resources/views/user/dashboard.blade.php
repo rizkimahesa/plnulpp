@@ -5,7 +5,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {{-- Form pencarian dan filter --}}
-        <form method="GET" action="{{ route('dashboard') }}" class="mb-6 flex flex-wrap gap-3 items-center">
+        <form method="GET" action="{{ route('user.dashboard') }}" class="mb-6 flex flex-wrap gap-3 items-center">
             <input 
                 type="text" 
                 name="search" 
@@ -30,32 +30,28 @@
             >
                 <option value="">-- Semua Kolom --</option>
 
-                @if(!request('kategori') || request('kategori') == 'p2tl')
-                    <optgroup label="Kolom P2TL">
-                        <option value="Idpel" {{ request('kolom') == 'Idpel' ? 'selected' : '' }}>Idpel</option>
-                        <option value="NO BA" {{ request('kolom') == 'NO BA' ? 'selected' : '' }}>NO BA</option>
-                        <option value="NOREGISTER" {{ request('kolom') == 'NOREGISTER' ? 'selected' : '' }}>NOREGISTER</option>
-                        <option value="Nama ID pelanggan" {{ request('kolom') == 'Nama ID pelanggan' ? 'selected' : '' }}>Nama ID pelanggan</option>
-                    </optgroup>
+                {{-- Opsi kolom untuk kategori P2TL --}}
+                @if(request('kategori') == 'p2tl' || !request('kategori'))
+                    <option value="Idpel" {{ request('kolom') == 'Idpel' ? 'selected' : '' }}>Idpel</option>
+                    <option value="NO BA" {{ request('kolom') == 'NO BA' ? 'selected' : '' }}>NO BA</option>
+                    <option value="NOREGISTER" {{ request('kolom') == 'NOREGISTER' ? 'selected' : '' }}>NOREGISTER</option>
+                    <option value="Nama ID pelanggan" {{ request('kolom') == 'Nama ID pelanggan' ? 'selected' : '' }}>Nama ID pelanggan</option>
                 @endif
 
-                @if(!request('kategori') || request('kategori') == 'billing')
-                    <optgroup label="Kolom Billing">
-                        <option value="IDPEL" {{ request('kolom') == 'IDPEL' ? 'selected' : '' }}>IDPEL</option>
-                        <option value="NAMA" {{ request('kolom') == 'NAMA' ? 'selected' : '' }}>NAMA</option>
-                        <option value="BLTH" {{ request('kolom') == 'BLTH' ? 'selected' : '' }}>BLTH</option>
-                    </optgroup>
+                {{-- Opsi kolom untuk kategori Billing --}}
+                @if(request('kategori') == 'billing')
+                    <option value="IDPEL" {{ request('kolom') == 'IDPEL' ? 'selected' : '' }}>IDPEL</option>
+                    <option value="NAMA" {{ request('kolom') == 'NAMA' ? 'selected' : '' }}>NAMA</option>
+                    <option value="BLTH" {{ request('kolom') == 'BLTH' ? 'selected' : '' }}>BLTH</option>
                 @endif
 
-                @if(!request('kategori') || request('kategori') == 'harmet')
-                    <optgroup label="Kolom Harmet">
-                        <option value="ID PELANGGAN" {{ request('kolom') == 'ID PELANGGAN' ? 'selected' : '' }}>ID PELANGGAN</option>
-                        <option value="Nama Pelanggan" {{ request('kolom') == 'Nama Pelanggan' ? 'selected' : '' }}>Nama Pelanggan</option>
-                        <option value="NO. BA" {{ request('kolom') == 'NO. BA' ? 'selected' : '' }}>NO. BA</option>
-                    </optgroup>
-                @endif
+            {{-- Opsi kolom untuk kategori Harmet --}}
+            @if(request('kategori') == 'harmet')
+                <option value="ID PELANGGAN" {{ request('kolom') == 'ID PELANGGAN' ? 'selected' : '' }}>ID PELANGGAN</option>
+                <option value="Nama Pelanggan" {{ request('kolom') == 'Nama Pelanggan' ? 'selected' : '' }}>Nama Pelanggan</option>
+                <option value="NO. BA" {{ request('kolom') == 'NO. BA' ? 'selected' : '' }}>NO. BA</option>
+            @endif
             </select>
-
 
             <button 
                 type="submit" 
