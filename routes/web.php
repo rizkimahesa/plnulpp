@@ -9,6 +9,7 @@ use App\Http\Controllers\HarmetController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserDashboardController;
+use App\Http\Controllers\PemakaianKWHController;
 use App\Http\Middleware\RoleMiddleware;
 
 // Redirect root ke halaman login
@@ -45,6 +46,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Halaman Billing
     Route::get('/billing', [BillingController::class, 'index'])->name('billing.index');
+
+    Route::get('/pemakaian-kwh', [PemakaianKWHController::class, 'index'])->name('pemakaian.kwh');
 
     // Data P2TL & Realisasi
     Route::prefix('data')->name('data.')->group(function () {

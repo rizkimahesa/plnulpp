@@ -54,7 +54,7 @@
                     type="{{ in_array($label, $tanggalFields) ? 'date' : 'text' }}" 
                     name="col_{{ $colIndex }}" 
                     value="{{ $date }}" 
-                    class="w-full p-2 border rounded">
+                    class="w-full p-2 border rounded text-black">
             </div>
         @endforeach
 

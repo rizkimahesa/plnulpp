@@ -1,4 +1,4 @@
-`@extends('layouts.app')
+@extends('layouts.app')
 
 @section('content')
 <div class="py-6">
@@ -56,7 +56,6 @@
                 @endif
             </select>
 
-
             <button 
                 type="submit" 
                 class="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold text-sm rounded-md shadow-md transition focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-300"
@@ -77,19 +76,44 @@
                             @foreach ($data[0] as $header)
                                 <th class="px-4 py-3 border border-gray-500">{{ $header }}</th>
                             @endforeach
+                            <th class="px-4 py-3 border border-gray-500">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                        @php
+                            $headers = array_map('strtoupper', $data[0]);
+                            $idpelIndex = array_search('IDPEL', $headers);
+                            $statusIndex = array_search('STATUS', $headers);
+                        @endphp
                         @foreach (array_slice($data, 1) as $row)
+                            @php
+                                $idpelanggan = ($idpelIndex !== false && isset($row[$idpelIndex])) ? trim($row[$idpelIndex]) : null;
+                                $statusValue = ($statusIndex !== false && isset($row[$statusIndex])) ? strtolower(trim($row[$statusIndex])) : '';
+                            @endphp
                             <tr class="hover:bg-gray-100 dark:hover:bg-gray-700">
-                                @foreach ($row as $cell)
+                                @foreach ($data[0] as $i => $header)
                                     <td class="px-4 py-3 border border-gray-300 dark:border-gray-700 whitespace-nowrap text-gray-900 dark:text-gray-100">
-                                        {{ $cell }}
+                                        {{ $row[$i] ?? '' }}
                                     </td>
                                 @endforeach
+                                <td class="px-4 py-3 border border-gray-300 dark:border-gray-700 whitespace-nowrap text-gray-900 dark:text-gray-100 space-x-1">
+                                    @if ($statusValue === 'lunas' && $idpelanggan)
+                                        <a href="{{ route('data.realisasi.byIdpel', ['idpel' => $idpelanggan]) }}"
+                                        class="inline-block px-2 py-1 bg-green-500 hover:bg-green-600 text-white rounded text-xs font-semibold">
+                                            🔗 Lunas
+                                        </a>
+                                    @endif
+                                    @if ($idpelanggan)
+                                        <a href="{{ route('data.p2tl.edit', ['id' => $idpelanggan]) }}"
+                                        class="inline-block px-2 py-1 bg-yellow-400 hover:bg-yellow-500 text-white rounded text-xs font-semibold">
+                                            ✏️ Edit
+                                        </a>
+                                    @endif
+                                </td>
                             </tr>
                         @endforeach
                     </tbody>
+
                 </table>
             </div>
         @else

@@ -85,13 +85,14 @@ class SpreedsheetController extends Controller
         $realisasiData = [];
 
         if (!empty($idpelLunas)) {
-            // Ambil data realisasi
             $realRows = $this->getSheetData('1_gtHDcSetTEggCVeLt1H_nx_25rXXOrvM0BMWa6plfE', 'Sheet1!A:AI');
+
+            // AMBIL HEADER DARI BARIS KE-3 DAN BODY MULAI DARI BARIS KE-7
             $realHeader = $realRows[0] ?? [];
-            $realBody = array_slice($realRows, 1);
+            $realBody = array_slice($realRows, 5);
+
             $realIndex = array_flip(array_map('strtolower', $realHeader));
 
-            // Normalisasi semua IDPEL dari p2tl
             $normalizedIdpelLunas = array_map(function ($val) {
                 return strtolower(trim((string)$val));
             }, $idpelLunas);
@@ -104,6 +105,7 @@ class SpreedsheetController extends Controller
 
                 $realisasiData = [$realHeader, ...array_values($filteredReal)];
             }
+
         }
 
         return view('data', [
