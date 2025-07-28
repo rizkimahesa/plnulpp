@@ -27,67 +27,128 @@ class DashboardController extends Controller
             ],
             'p2tl' => [
                 'id' => '1qOjBDKZ6ZIvrP_otBfqXc9EA1PfBjzhPl0wBwc9Fk5M',
-                'range' => 'Sheet1!A:Z'
+                'range' => 'Sheet1!A:AI'
             ],
             'harmet' => [
                 'id' => '1xPT7YXpXm2RwiD-Z_bbyQ-qjtE3LYxKEx6-DnqKLmYU',
                 'range' => 'Sheet1!A:Z'
             ],
+            'pem kwh' => [
+                'id' => '1KqZ6YrNpZURqc3IlH3_JOLtaZ3DvUXbh2mhhLderdrs',
+                'range' => 'ALL_SHEET'
+            ],
         ];
 
-        $selectedSheets = [];
-
-        if ($kategori && isset($sheetConfigs[$kategori])) {
-            $selectedSheets[$kategori] = $sheetConfigs[$kategori];
-        } else {
-            $selectedSheets = $sheetConfigs;
-        }
+        $selectedSheets = $kategori && isset($sheetConfigs[$kategori])
+            ? [$kategori => $sheetConfigs[$kategori]]
+            : $sheetConfigs;
 
         $finalData = [];
+        $chartData = [];
         $addedHeader = false;
 
         foreach ($selectedSheets as $key => $sheet) {
-            $response = $service->spreadsheets_values->get($sheet['id'], $sheet['range']);
-            $values = $response->getValues();
+            if ($key === 'pem kwh') {
+                $spreadsheet = $service->spreadsheets->get($sheet['id']);
+                $sheetTitles = array_map(fn($s) => $s->getProperties()->getTitle(), $spreadsheet->getSheets());
 
-            if (empty($values)) continue;
+                foreach ($sheetTitles as $title) {
+                    $range = $title . '!A:N';
+                    $response = $service->spreadsheets_values->get($sheet['id'], $range);
+                    $values = $response->getValues();
 
-            // Header normalization
-            $header = $values[0];
-            if ($key == 'harmet') {
-                foreach ($header as &$h) {
-                    if (strtolower(trim($h)) === 'up3') $h = 'Idpel';
-                    if (strtolower(trim($h)) === 'ulp') $h = 'Nama';
-                }
-            }
-            $values[0] = $header;
+                    if (empty($values)) continue;
 
-            // Pencarian jika search dan kolom diisi
-            if ($search && $kolom) {
-                $colIndex = array_search($kolom, $header);
-                if ($colIndex !== false) {
-                    $matchedRows = array_filter(array_slice($values, 1), function ($row) use ($colIndex, $search) {
-                        return isset($row[$colIndex]) && stripos($row[$colIndex], $search) !== false;
-                    });
+                    $header = $values[0];
+                    $body = array_slice($values, 1);
 
-                    if (!empty($matchedRows)) {
+                    // Untuk pencarian
+                    if ($search && $kolom) {
+                        $colIndex = array_search($kolom, $header);
+                        if ($colIndex !== false) {
+                            $matchedRows = array_filter($body, fn($row) =>
+                                isset($row[$colIndex]) && stripos($row[$colIndex], $search) !== false
+                            );
+
+                            if (!empty($matchedRows)) {
+                                if (!$addedHeader) {
+                                    $finalData[] = $header;
+                                    $addedHeader = true;
+                                }
+                                $finalData = array_merge($finalData, $matchedRows);
+                            }
+
+                            // Ambil data grafik PEMKWH
+                            if (strtolower($kolom) === 'idpel') {
+                                $colIdpel = array_search('IDPEL', array_map('strtoupper', $header));
+                                $colPemkwh = array_search('PEMKWH', array_map('strtoupper', $header));
+
+                                foreach ($matchedRows as $row) {
+                                    if (
+                                        $colIdpel !== false && $colPemkwh !== false &&
+                                        isset($row[$colIdpel]) &&
+                                        stripos($row[$colIdpel], $search) !== false
+                                    ) {
+                                        $chartData[] = [
+                                            'label' => $title,
+                                            'value' => isset($row[$colPemkwh]) ? floatval($row[$colPemkwh]) : 0,
+                                        ];
+                                    }
+                                }
+                            }
+                        }
+                    } else {
                         if (!$addedHeader) {
                             $finalData[] = $header;
                             $addedHeader = true;
                         }
-                        $finalData = array_merge($finalData, $matchedRows);
+                        $finalData = array_merge($finalData, $body);
                     }
                 }
             } else {
-                // Jika tidak sedang mencari, gabungkan semua data
-                if (!$addedHeader) {
-                    $finalData[] = $header;
-                    $addedHeader = true;
+                $response = $service->spreadsheets_values->get($sheet['id'], $sheet['range']);
+                $values = $response->getValues();
+
+                if (empty($values)) continue;
+
+                $header = $values[0];
+                if ($key === 'harmet') {
+                    foreach ($header as &$h) {
+                        if (strtolower(trim($h)) === 'up3') $h = 'Idpel';
+                        if (strtolower(trim($h)) === 'ulp') $h = 'Nama';
+                    }
                 }
-                $finalData = array_merge($finalData, array_slice($values, 1));
+
+                $values[0] = $header;
+
+                if ($search && $kolom) {
+                    $colIndex = array_search($kolom, $header);
+                    if ($colIndex !== false) {
+                        $matchedRows = array_filter(array_slice($values, 1), fn($row) =>
+                            isset($row[$colIndex]) && stripos($row[$colIndex], $search) !== false
+                        );
+
+                        if (!empty($matchedRows)) {
+                            if (!$addedHeader) {
+                                $finalData[] = $header;
+                                $addedHeader = true;
+                            }
+                            $finalData = array_merge($finalData, $matchedRows);
+                        }
+                    }
+                } else {
+                    if (!$addedHeader) {
+                        $finalData[] = $header;
+                        $addedHeader = true;
+                    }
+                    $finalData = array_merge($finalData, array_slice($values, 1));
+                }
             }
         }
 
-        return view('dashboard', ['data' => $finalData]);
+        return view('dashboard', [
+            'data' => $finalData,
+            'chartData' => $chartData
+        ]);
     }
 }

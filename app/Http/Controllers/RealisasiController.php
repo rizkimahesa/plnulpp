@@ -88,8 +88,8 @@ class RealisasiController extends Controller
         }
 
         // Baris ke-3 dianggap sebagai header
-        $header = $values[2];
-        $body = array_slice($values, 3);
+        $header = $values[0];
+        $body = array_slice($values, 5);
 
         // Mapping header (gunakan UPPERCASE agar seragam)
         $indexMap = [];

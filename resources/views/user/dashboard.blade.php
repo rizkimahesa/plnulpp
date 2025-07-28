@@ -1,4 +1,4 @@
-`@extends('layouts.app')
+@extends('layouts.app')
 
 @section('content')
 <div class="py-6">
@@ -30,27 +30,30 @@
             >
                 <option value="">-- Semua Kolom --</option>
 
-                {{-- Opsi kolom untuk kategori P2TL --}}
-                @if(request('kategori') == 'p2tl' || !request('kategori'))
-                    <option value="Idpel" {{ request('kolom') == 'Idpel' ? 'selected' : '' }}>Idpel</option>
-                    <option value="NO BA" {{ request('kolom') == 'NO BA' ? 'selected' : '' }}>NO BA</option>
-                    <option value="NOREGISTER" {{ request('kolom') == 'NOREGISTER' ? 'selected' : '' }}>NOREGISTER</option>
-                    <option value="Nama ID pelanggan" {{ request('kolom') == 'Nama ID pelanggan' ? 'selected' : '' }}>Nama ID pelanggan</option>
+                @if(!request('kategori') || request('kategori') == 'p2tl')
+                    <optgroup label="Kolom P2TL">
+                        <option value="IDPEL" {{ request('kolom') == 'IDPEL' ? 'selected' : '' }}>IDPEL</option>
+                        <option value="NO BA" {{ request('kolom') == 'NO BA' ? 'selected' : '' }}>NO BA</option>
+                        <option value="NOREGISTER" {{ request('kolom') == 'NOREGISTER' ? 'selected' : '' }}>NOREGISTER</option>
+                        <option value="Nama ID pelanggan" {{ request('kolom') == 'Nama ID pelanggan' ? 'selected' : '' }}>Nama ID pelanggan</option>
+                    </optgroup>
                 @endif
 
-                {{-- Opsi kolom untuk kategori Billing --}}
-                @if(request('kategori') == 'billing')
-                    <option value="IDPEL" {{ request('kolom') == 'IDPEL' ? 'selected' : '' }}>IDPEL</option>
-                    <option value="NAMA" {{ request('kolom') == 'NAMA' ? 'selected' : '' }}>NAMA</option>
-                    <option value="BLTH" {{ request('kolom') == 'BLTH' ? 'selected' : '' }}>BLTH</option>
+                @if(!request('kategori') || request('kategori') == 'billing')
+                    <optgroup label="Kolom Billing">
+                        <option value="IDPEL" {{ request('kolom') == 'IDPEL' ? 'selected' : '' }}>IDPEL</option>
+                        <option value="NAMA" {{ request('kolom') == 'NAMA' ? 'selected' : '' }}>NAMA</option>
+                        <option value="BLTH" {{ request('kolom') == 'BLTH' ? 'selected' : '' }}>BLTH</option>
+                    </optgroup>
                 @endif
 
-            {{-- Opsi kolom untuk kategori Harmet --}}
-            @if(request('kategori') == 'harmet')
-                <option value="ID PELANGGAN" {{ request('kolom') == 'ID PELANGGAN' ? 'selected' : '' }}>ID PELANGGAN</option>
-                <option value="Nama Pelanggan" {{ request('kolom') == 'Nama Pelanggan' ? 'selected' : '' }}>Nama Pelanggan</option>
-                <option value="NO. BA" {{ request('kolom') == 'NO. BA' ? 'selected' : '' }}>NO. BA</option>
-            @endif
+                @if(!request('kategori') || request('kategori') == 'harmet')
+                    <optgroup label="Kolom Harmet">
+                        <option value="ID PELANGGAN" {{ request('kolom') == 'ID PELANGGAN' ? 'selected' : '' }}>ID PELANGGAN</option>
+                        <option value="Nama Pelanggan" {{ request('kolom') == 'Nama Pelanggan' ? 'selected' : '' }}>Nama Pelanggan</option>
+                        <option value="NO. BA" {{ request('kolom') == 'NO. BA' ? 'selected' : '' }}>NO. BA</option>
+                    </optgroup>
+                @endif
             </select>
 
             <button 
@@ -73,19 +76,44 @@
                             @foreach ($data[0] as $header)
                                 <th class="px-4 py-3 border border-gray-500">{{ $header }}</th>
                             @endforeach
+                            <th class="px-4 py-3 border border-gray-500">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                        @php
+                            $headers = array_map('strtoupper', $data[0]);
+                            $idpelIndex = array_search('IDPEL', $headers);
+                            $statusIndex = array_search('STATUS', $headers);
+                        @endphp
                         @foreach (array_slice($data, 1) as $row)
+                            @php
+                                $idpelanggan = ($idpelIndex !== false && isset($row[$idpelIndex])) ? trim($row[$idpelIndex]) : null;
+                                $statusValue = ($statusIndex !== false && isset($row[$statusIndex])) ? strtolower(trim($row[$statusIndex])) : '';
+                            @endphp
                             <tr class="hover:bg-gray-100 dark:hover:bg-gray-700">
-                                @foreach ($row as $cell)
+                                @foreach ($data[0] as $i => $header)
                                     <td class="px-4 py-3 border border-gray-300 dark:border-gray-700 whitespace-nowrap text-gray-900 dark:text-gray-100">
-                                        {{ $cell }}
+                                        {{ $row[$i] ?? '' }}
                                     </td>
                                 @endforeach
+                                <td class="px-4 py-3 border border-gray-300 dark:border-gray-700 whitespace-nowrap text-gray-900 dark:text-gray-100 space-x-1">
+                                    @if ($statusValue === 'lunas' && $idpelanggan)
+                                        <a href="{{ route('data.realisasi.byIdpel', ['idpel' => $idpelanggan]) }}"
+                                        class="inline-block px-2 py-1 bg-green-500 hover:bg-green-600 text-white rounded text-xs font-semibold">
+                                            🔗 Lunas
+                                        </a>
+                                    @endif
+                                    @if ($idpelanggan)
+                                        <a href="{{ route('data.p2tl.edit', ['id' => $idpelanggan]) }}"
+                                        class="inline-block px-2 py-1 bg-yellow-400 hover:bg-yellow-500 text-white rounded text-xs font-semibold">
+                                            ✏️ Edit
+                                        </a>
+                                    @endif
+                                </td>
                             </tr>
                         @endforeach
                     </tbody>
+
                 </table>
             </div>
         @else

@@ -25,6 +25,10 @@
         Billing
     </a>
 
+    <a href="{{ route('pemakaian.kwh') }}" class="text-white hover:underline underline-offset-4 decoration-2 decoration-indigo-500 px-3 py-2 text-sm font-medium">
+        Pem KWH
+    </a>
+
     @auth
     <div x-data="{ openData: false }" class="relative">
         <button @click="openData = !openData"

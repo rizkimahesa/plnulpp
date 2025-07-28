@@ -39,7 +39,9 @@
                     <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                         @forelse ($body as $index => $row)
                             @php
-                                $idpelanggan = ($idpelIndex !== false && isset($row[$idpelIndex])) ? trim($row[$idpelIndex]) : null;
+                                $idpelanggan = ($idpelIndex !== false && isset($row[$idpelIndex])) 
+                                ? preg_replace('/\s+/', '', strtoupper(trim($row[$idpelIndex]))) 
+                                : null;
                                 $statusValue = ($statusIndex !== false && isset($row[$statusIndex])) ? strtolower(trim($row[$statusIndex])) : '';
                             @endphp
 

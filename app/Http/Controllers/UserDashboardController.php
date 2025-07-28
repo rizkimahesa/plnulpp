@@ -27,7 +27,7 @@ class UserDashboardController extends Controller
             ],
             'p2tl' => [
                 'id' => '1qOjBDKZ6ZIvrP_otBfqXc9EA1PfBjzhPl0wBwc9Fk5M',
-                'range' => 'Sheet1!A:Z'
+                'range' => 'Sheet1!A:AI'
             ],
             'harmet' => [
                 'id' => '1xPT7YXpXm2RwiD-Z_bbyQ-qjtE3LYxKEx6-DnqKLmYU',
@@ -55,7 +55,7 @@ class UserDashboardController extends Controller
             $header = $values[0];
             if ($key == 'harmet') {
                 foreach ($header as &$h) {
-                    if (strtolower(trim($h)) === 'up3') $h = 'Idpel';
+                    if (strtolower(trim($h)) === 'up3') $h = 'IDPEL';
                     if (strtolower(trim($h)) === 'ulp') $h = 'Nama';
                 }
             }

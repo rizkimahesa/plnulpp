@@ -7,12 +7,22 @@ use Illuminate\Support\Facades\Http;
 use Google\Client;
 use Google\Service\Sheets;
 use Google\Service\Sheets\ValueRange;
+use App\Services\GoogleDriveService;
+
 
 class SpreedsheetController extends Controller
 {
     private $spreadsheetId = '1qOjBDKZ6ZIvrP_otBfqXc9EA1PfBjzhPl0wBwc9Fk5M';
     private $sheetName = 'Sheet1';
     private $apiKey = 'AIzaSyCz5r5jRyKdrnpx1v-w8fzrJ4OEQphBIm4';
+
+    protected $driveService;
+
+    public function __construct(GoogleDriveService $driveService)
+    {
+        $this->driveService = $driveService;
+    }
+
 
     private function getSheetData($spreadsheetId, $range)
     {
@@ -60,7 +70,7 @@ class SpreedsheetController extends Controller
 
         $keyword = strtolower($request->input('search'));
         $kategori = strtolower($request->input('kategori'));
-        $kolom = $request->input('kolom');
+        $kolom = strtolower(trim($request->input('kolom')));
 
         if ($keyword || $kategori || $kolom) {
             $body = array_filter($body, function ($row) use ($keyword, $kategori, $kolom, $index) {
@@ -75,13 +85,14 @@ class SpreedsheetController extends Controller
         $realisasiData = [];
 
         if (!empty($idpelLunas)) {
-            // Ambil data realisasi
             $realRows = $this->getSheetData('1_gtHDcSetTEggCVeLt1H_nx_25rXXOrvM0BMWa6plfE', 'Sheet1!A:AI');
+
+            // AMBIL HEADER DARI BARIS KE-3 DAN BODY MULAI DARI BARIS KE-7
             $realHeader = $realRows[0] ?? [];
-            $realBody = array_slice($realRows, 1);
+            $realBody = array_slice($realRows, 5);
+
             $realIndex = array_flip(array_map('strtolower', $realHeader));
 
-            // Normalisasi semua IDPEL dari p2tl
             $normalizedIdpelLunas = array_map(function ($val) {
                 return strtolower(trim((string)$val));
             }, $idpelLunas);
@@ -94,6 +105,7 @@ class SpreedsheetController extends Controller
 
                 $realisasiData = [$realHeader, ...array_values($filteredReal)];
             }
+
         }
 
         return view('data', [
@@ -109,69 +121,77 @@ class SpreedsheetController extends Controller
         $values = $service->spreadsheets_values->get($this->spreadsheetId, $range)->getValues();
 
         $headers = $values[0];
-        $idpelIndex = array_search('Idpel', $headers);
+        $idpelIndex = array_search('IDPEL', $headers);
         $rowToEdit = collect(array_slice($values, 1))->firstWhere($idpelIndex, $id);
 
-        if (!$rowToEdit) return redirect()->back()->with('error', 'Data tidak ditemukan.');
+        if (!$rowToEdit) {
+            return redirect()->back()->with('error', 'Data tidak ditemukan.');
+        }
+
+        // Ambil link folder Google Drive berdasarkan tanggal hari ini
+        $parentFolderId = '15_XJRPQ15ErknO4h7eNDX1ciV-JoRvlx';
+        $todayFormatted = now()->format('d-m-Y');
+        $folderToday = $this->driveService->findFolderByDate($parentFolderId, $todayFormatted);
+        $linkDriveHariIni = $folderToday ? "https://drive.google.com/drive/folders/" . $folderToday['id'] : null;
 
         return view('user.edit', [
             'id' => $id,
             'headers' => $headers,
             'row' => $rowToEdit,
+            'linkDriveHariIni' => $linkDriveHariIni,
         ]);
     }
+
 
     public function update(Request $request, $id)
-    {
-        $service = $this->initGoogleClient();
-        $range = $this->sheetName . '!A:AI';
-        $data = $service->spreadsheets_values->get($this->spreadsheetId, $range)->getValues();
+{
+    $service = $this->initGoogleClient();
+    $range = $this->sheetName . '!A:AI';
+    $data = $service->spreadsheets_values->get($this->spreadsheetId, $range)->getValues();
 
-        $headers = $data[0];
-        $headersUpper = array_map('strtoupper', $headers);
-        $idpelIndex = array_search('IDPEL', $headersUpper);
-        $rowIndex = $this->findRowByIdpel($data, $idpelIndex, $id);
+    $headers = $data[0];
+    $headersUpper = array_map('strtoupper', $headers);
+    $idpelIndex = array_search('IDPEL', $headersUpper);
+    $rowIndex = $this->findRowByIdpel($data, $idpelIndex, $id);
 
-        if (is_null($rowIndex)) {
-            return redirect()->route('data.p2tl')->with('error', 'ID tidak ditemukan dalam spreadsheet.');
-        }
-
-        $editableHeaders = [
-            'TANGGAL SP1', 'TANGGAL SP2', 'TANGGAL SP3',
-            'TANGGAL Peringatan 1', 'Tanggal Peringatan 2',
-            'ket pangilan 2', 'ket pangilan 3',
-            'ket peringatan 1', 'ket peringatan 2',
-        ];
-
-        $maxCols = max(count($headers), 35);
-        $data[$rowIndex] = array_pad($data[$rowIndex], $maxCols, '');
-
-        foreach ($editableHeaders as $header) {
-            $colIndex = array_search(strtoupper($header), $headersUpper);
-            if ($colIndex !== false) {
-                $data[$rowIndex][$colIndex] = $request->input($header, '');
-            }
-        }
-
-        $values = [ array_map('strval', $data[$rowIndex]) ];
-        $lastCol = $this->columnLetterFromIndex(count($values[0]) - 1);
-        $updateRange = "{$this->sheetName}!A" . ($rowIndex + 1) . ":{$lastCol}" . ($rowIndex + 1);
-
-        $body = new ValueRange([
-            'range' => $updateRange,
-            'majorDimension' => 'ROWS',
-            'values' => $values,
-        ]);
-
-        $service->spreadsheets_values->update(
-            $this->spreadsheetId,
-            $updateRange,
-            $body,
-            ['valueInputOption' => 'RAW']
-        );
-
-        return redirect()->route('data.p2tl')->with('success', '✅ Data berhasil diperbarui.');
+    if (is_null($rowIndex)) {
+        return redirect()->route('data.p2tl')->with('error', 'ID tidak ditemukan dalam spreadsheet.');
     }
+
+    // Index kolom yang bisa diedit (R sampai Z = 17-25)
+    $editableIndexes = [17, 18, 19, 20, 21, 22, 23, 24, 25];
+    $data[$rowIndex] = array_pad($data[$rowIndex], 35, '');
+
+    foreach ($editableIndexes as $colIndex) {
+        $inputKey = 'col_' . $colIndex;
+        if ($request->has($inputKey)) {
+            $data[$rowIndex][$colIndex] = $request->input($inputKey, '');
+        }
+    }
+
+    $maxCols = max(count($headers), 35);
+    $data[$rowIndex] = array_pad($data[$rowIndex], $maxCols, '');
+
+    $values = [ array_map('strval', $data[$rowIndex]) ];
+    $lastCol = $this->columnLetterFromIndex(count($values[0]) - 1);
+    $updateRange = "{$this->sheetName}!A" . ($rowIndex + 1) . ":{$lastCol}" . ($rowIndex + 1);
+
+    $body = new ValueRange([
+        'range' => $updateRange,
+        'majorDimension' => 'ROWS',
+        'values' => $values,
+    ]);
+
+    $service->spreadsheets_values->update(
+        $this->spreadsheetId,
+        $updateRange,
+        $body,
+        ['valueInputOption' => 'RAW']
+    );
+
+    return redirect()->route('data.p2tl')->with('success', '✅ Data berhasil diperbarui.');
+    }
+
     public function realisasiByIdpel($idpel)
 {
     try {
