@@ -59,6 +59,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('p2tl/{id}/edit', [SpreedsheetController::class, 'edit'])->name('p2tl.edit');
         Route::post('p2tl/{id}/update', [SpreedsheetController::class, 'update'])->name('p2tl.update');
     });
+
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
 // ==============================
