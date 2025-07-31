@@ -12,8 +12,8 @@ use App\Services\GoogleDriveService;
 
 class SpreedsheetController extends Controller
 {
-    private $spreadsheetId = '1qOjBDKZ6ZIvrP_otBfqXc9EA1PfBjzhPl0wBwc9Fk5M';
-    private $sheetName = 'Sheet1';
+    private $spreadsheetId = '1DT_HiGiBo6rfIPI1jSgI7gmZSuH2GMWc2Lj7ZOiUePY';
+    private $sheetName = 'P2tl';
     private $apiKey = 'AIzaSyCz5r5jRyKdrnpx1v-w8fzrJ4OEQphBIm4';
 
     protected $driveService;
@@ -62,7 +62,7 @@ class SpreedsheetController extends Controller
 
     public function data(Request $request)
     {
-        $range = 'Sheet1!A:AI';
+        $range = 'P2tl!A:AI';
         $rows = $this->getSheetData($this->spreadsheetId, $range);
         $header = $rows[0] ?? [];
         $body = array_slice($rows, 1);
@@ -195,8 +195,8 @@ class SpreedsheetController extends Controller
     public function realisasiByIdpel($idpel)
 {
     try {
-        $spreadsheetId = '1_gtHDcSetTEggCVeLt1H_nx_25rXXOrvM0BMWa6plfE';
-        $range = 'Sheet1!A:AI';
+        $spreadsheetId = '1DT_HiGiBo6rfIPI1jSgI7gmZSuH2GMWc2Lj7ZOiUePY';
+        $range = 'REALISASI!A:AI';
 
         $rows = $this->getSheetData($spreadsheetId, $range);
         if (count($rows) < 4) {

@@ -9,14 +9,14 @@ class RealisasiController extends Controller
 {
     public function index(Request $request)
     {
-        return $this->fetchFromSheet($request, 'Sheet1');
+        return $this->fetchFromSheet($request, 'REALISASI');
     }
 
     private function fetchFromSheet(Request $request, $sheetName)
     {
         $apiKey = 'AIzaSyCz5r5jRyKdrnpx1v-w8fzrJ4OEQphBIm4';
-        $spreadsheetId = '1_gtHDcSetTEggCVeLt1H_nx_25rXXOrvM0BMWa6plfE';
-        $range = 'Sheet1!A:AI';
+        $spreadsheetId = '1DT_HiGiBo6rfIPI1jSgI7gmZSuH2GMWc2Lj7ZOiUePY';
+        $range = 'REALISASI!A:AI';
 
         $url = "https://sheets.googleapis.com/v4/spreadsheets/{$spreadsheetId}/values/{$range}?key={$apiKey}";
         $response = Http::get($url);
@@ -71,9 +71,9 @@ class RealisasiController extends Controller
     public function byIdpel($idpel)
 {
     try {
-        $spreadsheetId = '1_gtHDcSetTEggCVeLt1H_nx_25rXXOrvM0BMWa6plfE';
+        $spreadsheetId = '1DT_HiGiBo6rfIPI1jSgI7gmZSuH2GMWc2Lj7ZOiUePY';
         $apiKey = 'AIzaSyCz5r5jRyKdrnpx1v-w8fzrJ4OEQphBIm4';
-        $range = 'Sheet1!A:AI';
+        $range = 'REALISASI!A:AI';
 
         $url = "https://sheets.googleapis.com/v4/spreadsheets/{$spreadsheetId}/values/{$range}?key={$apiKey}";
         $response = Http::get($url);

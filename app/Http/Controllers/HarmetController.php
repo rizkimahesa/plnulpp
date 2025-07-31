@@ -10,8 +10,8 @@ class HarmetController extends Controller
     public function index(Request $request)
     {
         $apiKey = 'AIzaSyCz5r5jRyKdrnpx1v-w8fzrJ4OEQphBIm4';
-        $spreadsheetId = '1xPT7YXpXm2RwiD-Z_bbyQ-qjtE3LYxKEx6-DnqKLmYU';
-        $range = '!A:M';
+        $spreadsheetId = '1qkDS_jlyq1jbk8oDFY9vQbSItxL-xB5B8kmfn2pvAQw';
+        $range = 'ganmet 2024 prabayar!A:M';
 
         $url = "https://sheets.googleapis.com/v4/spreadsheets/{$spreadsheetId}/values/{$range}?key={$apiKey}";
         $response = Http::get($url);
