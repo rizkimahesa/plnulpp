@@ -15,7 +15,7 @@ class DriveController extends Controller
 
     public function index()
     {
-        $parentFolderId = '15_XJRPQ15ErknO4h7eNDX1ciV-JoRvlx'; // ID folder utama di Google Drive
+        $parentFolderId = '1HxADw0gRVmb5xuq3bomTi5Mhri1knvi0'; // ID folder utama di Google Drive
         $folder = $this->drive->findFolderByDate($parentFolderId, now()->format('d-m-Y'));
 
         if (!$folder) {

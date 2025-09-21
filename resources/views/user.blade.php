@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+<div x-data="{ showModal: false, userId: null, userName: '' }" class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
     <h1 class="text-xl font-bold mb-4">Daftar Akun Terdaftar</h1>
 
     {{-- Flash Message --}}
@@ -28,17 +28,45 @@
                     <td class="px-6 py-4">{{ $user->email }}</td>
                     <td class="px-6 py-4 text-gray-400 italic">••••••••••</td>
                     <td class="px-6 py-4">
-                        <form action="{{ route('user.resetPassword', $user->id) }}" method="POST" onsubmit="return confirm('Reset password untuk {{ $user->name }}?')">
-                            @csrf
-                            <button type="submit" class="bg-red-500 hover:bg-red-600 text-white text-sm px-4 py-1 rounded">
-                                Reset Password
-                            </button>
-                        </form>
+                        <button 
+                            @click="showModal = true; userId = {{ $user->id }}; userName = '{{ $user->name }}'"
+                            class="bg-red-500 hover:bg-red-600 text-white text-sm px-4 py-1 rounded transition duration-200">
+                            Reset Password
+                        </button>
                     </td>
                 </tr>
                 @endforeach
             </tbody>
         </table>
     </div>
+
+    <!-- Modal -->
+    <div 
+        x-show="showModal" 
+        x-transition.opacity 
+        class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
+        x-cloak>
+        <div 
+            x-transition.scale 
+            class="bg-white rounded-2xl shadow-lg p-6 max-w-sm w-full">
+            <h2 class="text-lg font-bold text-gray-800 mb-4">Konfirmasi Reset Password</h2>
+            <p class="text-gray-600 mb-6">Apakah Anda yakin ingin mereset password untuk <span class="font-semibold text-red-500" x-text="userName"></span>?</p>
+
+            <form :action="'/user/' + userId + '/reset-password'" method="POST">
+                @csrf
+                <div class="flex justify-end space-x-3">
+                    <button type="button" @click="showModal = false" class="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400 text-gray-800 transition">
+                        Batal
+                    </button>
+                    <button type="submit" class="px-4 py-2 rounded bg-red-500 hover:bg-red-600 text-white transition">
+                        Ya, Reset
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
+
+{{-- Tambahkan Alpine.js --}}
+<script src="//unpkg.com/alpinejs" defer></script>
 @endsection

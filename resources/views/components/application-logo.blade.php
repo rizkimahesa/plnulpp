@@ -1,1 +1,0 @@
-<img src="{{ asset('img/logo-pln.png') }}" alt="Logo PLN" class="w-20 h-20 mx-auto">

@@ -10,7 +10,7 @@ class PemakaianKWHController extends Controller
     public function index(Request $request)
     {
         $apiKey = 'AIzaSyCz5r5jRyKdrnpx1v-w8fzrJ4OEQphBIm4';
-        $spreadsheetId = '1rV6_c94BlomYbWamH0zTWay9l5Bad3DBcl59dhC8EYQ';
+        $spreadsheetId = '1KqZ6YrNpZURqc3IlH3_JOLtaZ3DvUXbh2mhhLderdrs';
 
         // Ambil semua nama sheet
         $sheetMetaUrl = "https://sheets.googleapis.com/v4/spreadsheets/{$spreadsheetId}?key={$apiKey}";

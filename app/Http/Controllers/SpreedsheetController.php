@@ -12,8 +12,8 @@ use App\Services\GoogleDriveService;
 
 class SpreedsheetController extends Controller
 {
-    private $spreadsheetId = '1DT_HiGiBo6rfIPI1jSgI7gmZSuH2GMWc2Lj7ZOiUePY';
-    private $sheetName = 'P2tl';
+    private $spreadsheetId = '1qOjBDKZ6ZIvrP_otBfqXc9EA1PfBjzhPl0wBwc9Fk5M';
+    private $sheetName = 'Sheet1';
     private $apiKey = 'AIzaSyCz5r5jRyKdrnpx1v-w8fzrJ4OEQphBIm4';
 
     protected $driveService;
@@ -62,7 +62,7 @@ class SpreedsheetController extends Controller
 
     public function data(Request $request)
     {
-        $range = 'P2tl!A:AI';
+        $range = 'Sheet1!A:AI';
         $rows = $this->getSheetData($this->spreadsheetId, $range);
         $header = $rows[0] ?? [];
         $body = array_slice($rows, 1);
@@ -129,10 +129,10 @@ class SpreedsheetController extends Controller
         }
 
         // Ambil link folder Google Drive berdasarkan tanggal hari ini
-        $parentFolderId = '15_XJRPQ15ErknO4h7eNDX1ciV-JoRvlx';
+        $parentFolderId = '1HxADw0gRVmb5xuq3bomTi5Mhri1knvi0';
         $todayFormatted = now()->format('d-m-Y');
         $folderToday = $this->driveService->findFolderByDate($parentFolderId, $todayFormatted);
-        $linkDriveHariIni = $folderToday ? "https://drive.google.com/drive/folders/" . $folderToday['id'] : null;
+        $linkDriveHariIni = "https://drive.google.com/drive/folders/16502vdXCAZCqPPy5yAt89h8wle6gLfw8";
 
         return view('user.edit', [
             'id' => $id,
@@ -195,8 +195,8 @@ class SpreedsheetController extends Controller
     public function realisasiByIdpel($idpel)
 {
     try {
-        $spreadsheetId = '1DT_HiGiBo6rfIPI1jSgI7gmZSuH2GMWc2Lj7ZOiUePY';
-        $range = 'REALISASI!A:AI';
+        $spreadsheetId = '1_gtHDcSetTEggCVeLt1H_nx_25rXXOrvM0BMWa6plfE';
+        $range = 'Sheet1!A:AI';
 
         $rows = $this->getSheetData($spreadsheetId, $range);
         if (count($rows) < 4) {

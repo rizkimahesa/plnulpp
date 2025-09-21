@@ -22,16 +22,16 @@ class DashboardController extends Controller
 
         $sheetConfigs = [
             'billing' => [
-                'id' => '1Kxh6-3qWq062uyPw_LAbxMvu_7ObtH_p_xvT7Geo2ZU',
-                'range' => '17120!A:Z'
+                'id' => '1a5DSLnWj6WWPkJZzoCgb4ggvyONzFFo_LHA1lTYyam0',
+                'range' => 'Sheet1!A:Z'
             ],
             'p2tl' => [
-                'id' => '1DT_HiGiBo6rfIPI1jSgI7gmZSuH2GMWc2Lj7ZOiUePY',
-                'range' => 'P2tl!A:AI'
+                'id' => '1qOjBDKZ6ZIvrP_otBfqXc9EA1PfBjzhPl0wBwc9Fk5M',
+                'range' => 'Sheet1!A:AI'
             ],
             'harmet' => [
-                'id' => '1qkDS_jlyq1jbk8oDFY9vQbSItxL-xB5B8kmfn2pvAQw',
-                'range' => 'ganmet 2024 prabayar!A:Z'
+                'id' => '1xPT7YXpXm2RwiD-Z_bbyQ-qjtE3LYxKEx6-DnqKLmYU',
+                'range' => 'Sheet1!A:Z'
             ],
             'pem kwh' => [
                 'id' => '1KqZ6YrNpZURqc3IlH3_JOLtaZ3DvUXbh2mhhLderdrs',
@@ -79,21 +79,33 @@ class DashboardController extends Controller
                             }
 
                             // Ambil data grafik PEMKWH
-                            if (strtolower($kolom) === 'idpel') {
-                                $colIdpel = array_search('IDPEL', array_map('strtoupper', $header));
-                                $colPemkwh = array_search('PEMKWH', array_map('strtoupper', $header));
+                            $colIdpel = array_search('IDPEL', array_map('strtoupper', $header));
+                            $colNama = array_search('NAMA', array_map('strtoupper', $header));
+                            $colPemkwh = array_search('PEMKWH', array_map('strtoupper', $header));
 
-                                foreach ($matchedRows as $row) {
-                                    if (
-                                        $colIdpel !== false && $colPemkwh !== false &&
-                                        isset($row[$colIdpel]) &&
-                                        stripos($row[$colIdpel], $search) !== false
-                                    ) {
-                                        $chartData[] = [
-                                            'label' => $title,
-                                            'value' => isset($row[$colPemkwh]) ? floatval($row[$colPemkwh]) : 0,
-                                        ];
+                            foreach ($matchedRows as $row) {
+                                $match = false;
+
+                                // Cek berdasarkan IDPEL
+                                if (strtolower($kolom) === 'idpel' && $colIdpel !== false) {
+                                    if (isset($row[$colIdpel]) && stripos($row[$colIdpel], $search) !== false) {
+                                        $match = true;
                                     }
+                                }
+
+                                // Cek berdasarkan NAMA
+                                if (strtolower($kolom) === 'nama' && $colNama !== false) {
+                                    if (isset($row[$colNama]) && stripos($row[$colNama], $search) !== false) {
+                                        $match = true;
+                                    }
+                                }
+
+                                // Kalau cocok, tambahkan ke chartData
+                                if ($match && $colPemkwh !== false) {
+                                    $chartData[] = [
+                                        'label' => $title, // Nama sheet = bulan
+                                        'value' => isset($row[$colPemkwh]) ? floatval($row[$colPemkwh]) : 0,
+                                    ];
                                 }
                             }
                         }
