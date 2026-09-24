@@ -9,8 +9,6 @@ class HarmetController extends Controller
 {
     public function index(Request $request)
     {
-        $apiKey = 'AIzaSyCz5r5jRyKdrnpx1v-w8fzrJ4OEQphBIm4';
-        $spreadsheetId = '1xPT7YXpXm2RwiD-Z_bbyQ-qjtE3LYxKEx6-DnqKLmYU';
         $range = 'Sheet1!A:M';
 
         $url = "https://sheets.googleapis.com/v4/spreadsheets/{$spreadsheetId}/values/{$range}?key={$apiKey}";
