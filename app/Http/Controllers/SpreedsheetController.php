@@ -12,9 +12,6 @@ use App\Services\GoogleDriveService;
 
 class SpreedsheetController extends Controller
 {
-    private $spreadsheetId = '1qOjBDKZ6ZIvrP_otBfqXc9EA1PfBjzhPl0wBwc9Fk5M';
-    private $sheetName = 'Sheet1';
-    private $apiKey = 'AIzaSyCz5r5jRyKdrnpx1v-w8fzrJ4OEQphBIm4';
 
     protected $driveService;
 
