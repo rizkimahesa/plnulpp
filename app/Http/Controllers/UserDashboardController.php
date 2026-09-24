@@ -21,20 +21,6 @@ class UserDashboardController extends Controller
         $service = new Sheets($client);
 
         $sheetConfigs = [
-            'billing' => [
-                'id' => '1a5DSLnWj6WWPkJZzoCgb4ggvyONzFFo_LHA1lTYyam0',
-                'range' => 'Sheet1!A:Z'
-            ],
-            'p2tl' => [
-                'id' => '1qOjBDKZ6ZIvrP_otBfqXc9EA1PfBjzhPl0wBwc9Fk5M',
-                'range' => 'Sheet1!A:AI'
-            ],
-            'harmet' => [
-                'id' => '1xPT7YXpXm2RwiD-Z_bbyQ-qjtE3LYxKEx6-DnqKLmYU',
-                'range' => 'Sheet1!A:Z'
-            ],
-        ];
-
         $selectedSheets = [];
 
         if ($kategori && isset($sheetConfigs[$kategori])) {
