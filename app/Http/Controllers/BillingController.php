@@ -9,8 +9,7 @@ class BillingController extends Controller
 {
     public function index(Request $request)
 {
-    $apiKey = 'AIzaSyCz5r5jRyKdrnpx1v-w8fzrJ4OEQphBIm4';
-    $spreadsheetId = '1a5DSLnWj6WWPkJZzoCgb4ggvyONzFFo_LHA1lTYyam0';
+
     $range ='Sheet1!A:CJ';
 
     $url = "https://sheets.googleapis.com/v4/spreadsheets/{$spreadsheetId}/values/{$range}?key={$apiKey}";
